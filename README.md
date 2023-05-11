@@ -7,4 +7,6 @@ Dependencies:
   docx2pdf
   pypdf
   fitz
+
+Add an upload folder and an output folder
   
