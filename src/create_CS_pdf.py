@@ -1,11 +1,6 @@
 from docx2pdf import convert
-from pypdf import PdfWriter, PdfReader, PdfMerger
+from pypdf import PdfReader, PdfMerger
 import fitz
-from docx.shared import Cm, Pt
-from docx import Document
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.enum.text import WD_LINE_SPACING
-import re
 
 def create_CS_pdf(file, template_files_path,temporary_files_path, doc_type, language):
     content = f"{temporary_files_path}/content.pdf"

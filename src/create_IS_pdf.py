@@ -30,6 +30,7 @@ def get_file_info(input_path):
             id = ref_parts[1]
             date = ref_parts[2]
             found_acq_ref = True
+            p.text = ""
 
     filename_parts = filename.split(' ')
 
@@ -62,7 +63,28 @@ def get_file_info(input_path):
 
     return file_info
 
-
+def delete_acq_ref(input_path,temporary_files_path):
+    doc = Document(input_path)
+    found_acq_ref = False
+    for p in doc.paragraphs:
+        if found_acq_ref:
+            break
+            
+        if 'ACQ_REF' in p.text:
+            found_acq_ref = True
+            p.text = ""
+    
+    found_acq_author = False
+    for p in doc.paragraphs:
+        if found_acq_author:
+            break
+            
+        if 'ACQ_AUTHOR' in p.text:
+            p.text = ""
+            found_acq_author = True
+    output = f'{temporary_files_path}/input.docx'
+    doc.save(output)
+    return output
 
 def extract_IS_cover_page(input_path,temporary_files_path):
     doc = Document(input_path)
@@ -78,7 +100,7 @@ def extract_IS_cover_page(input_path,temporary_files_path):
             if paragraph.text.startswith("#(1)"):
                 doc.paragraphs[i]._element.getparent().remove(doc.paragraphs[i]._element)
     for i, paragraph in enumerate(doc.paragraphs):
-        if paragraph.text.startswith("#(2))"):
+        if paragraph.text.startswith("#(2)"):
             while len(doc.paragraphs)>i:
                 doc.paragraphs[i]._element.getparent().remove(doc.paragraphs[i]._element)
 
@@ -119,7 +141,7 @@ def extract_IS_content(input_path,temporary_files_path):
     for j in range(i):
         doc.paragraphs[0]._element.getparent().remove(doc.paragraphs[0]._element)
     doc.paragraphs[0]._element.getparent().remove(doc.paragraphs[0]._element)
-
+    
     doc.save(f'{temporary_files_path}/content.docx')
     content = f'{temporary_files_path}/content.pdf'
     convert(f'{temporary_files_path}/content.docx', f'{temporary_files_path}/content.pdf')
