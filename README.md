@@ -4,3 +4,7 @@ Dependencies:
   python-docx
   deepl
   requests
+  docx2pdf
+  pypdf
+  fitz
+  
