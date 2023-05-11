@@ -1,6 +1,5 @@
 from src.deepl_translate import translate_docx
 from src.create_IS_pdf import get_file_info, extract_IS_cover_page, extract_IS_content, create_IS_cover_page, merge_IS_pdf, edit_IS_pdf
-from src.create_xml import create_xml
 from src.create_CS_pdf import create_CS_pdf, edit_CS_pdf
 from src.upload_folder import input_folder
 import os
@@ -35,8 +34,6 @@ for file in translated_files:
     id = file_info["id"]
     date = file_info["date"]
     language = file_info["language"]
-
-    create_xml(file, output_folder_path, filename)
 
     if doc_type == "IS":
         cover_page = extract_IS_cover_page(file,temporary_files_path)
