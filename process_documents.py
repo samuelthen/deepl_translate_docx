@@ -8,7 +8,7 @@ from datetime import datetime
 import deepl
 
 config = {
-    "auth_key" : "", # copy key from DeepL
+    "auth_key" : "daa69283-7136-c9a5-c283-38cbd645e38e",
     "input_folder" : "./input_folder",
     "output_folder" : "./pdf_folder/",
     "temporary_files_path": "./lib/temporary_files/",
@@ -174,15 +174,15 @@ def create_CS_pdf(docx_file, doc_type, language):
         convert(docx_file, content)
         
         path = os.path.join(config['template_files_path'], f"cover-{doc_type}-{language}.pdf")
-        cover_page = fitz.open(path)
-        content = fitz.open(content)
+        
+        with fitz.open(path) as cover_page:
+            with fitz.open(content) as content1:
+                cover_page.insert_file(content1)
 
-        cover_page.insert_file(content)
+                merged_pdf = os.path.join(config['temporary_files_path'], "output.pdf")
+                cover_page.save(merged_pdf)
 
-        merged_pdf = os.path.join(config['temporary_files_path'], "output.pdf")
-        cover_page.save(merged_pdf)
-
-        return merged_pdf
+                return merged_pdf
     
     except Exception as e:
         print(f"{str(e)}\nAn error occurred while creating the CS PDF.")
@@ -190,22 +190,22 @@ def create_CS_pdf(docx_file, doc_type, language):
 
 def edit_CS_pdf(merged_pdf, company_name, date, id, language, filename,output_path):
     try:
-        doc = fitz.open(merged_pdf)
-        number = f"NO.: {id}-{language}"
-        page = doc[0]
-        rect = fitz.Rect(90, 265, 650, 400)
-        page.insert_textbox(rect, company_name, fontsize=28, fontname=config["font_name"],
-                                 fontfile=config["font_file"], fill=(1, 0, 0), align=0)
+        with fitz.open(merged_pdf) as doc:
+            number = f"NO.: {id}-{language}"
+            page = doc[0]
+            rect = fitz.Rect(90, 265, 650, 400)
+            page.insert_textbox(rect, company_name, fontsize=28, fontname=config["font_name"],
+                                    fontfile=config["font_file"], fill=(1, 0, 0), align=0)
 
-        rect1 = fitz.Rect(90, 320, 650, 400)
-        page.insert_textbox(rect1, date, fontsize=12, fontname=config["font_name"],
-                                  fontfile=config["font_file"], align=0)
+            rect1 = fitz.Rect(90, 320, 650, 400)
+            page.insert_textbox(rect1, date, fontsize=12, fontname=config["font_name"],
+                                    fontfile=config["font_file"], align=0)
 
-        rect2 = fitz.Rect(90, 110, 600, 400)
-        page.insert_textbox(rect2, number, fontsize=9, fontname=config["font_name"],
-                                  fontfile=config["font_file"], align=0)
+            rect2 = fitz.Rect(90, 110, 600, 400)
+            page.insert_textbox(rect2, number, fontsize=9, fontname=config["font_name"],
+                                    fontfile=config["font_file"], align=0)
 
-        doc.save(os.path.join(output_path, f"{filename}.pdf"))
+            doc.save(os.path.join(output_path, f"{filename}.pdf"))
     except Exception as e:
         print(f"{str(e)}\nAn error occurred while editing the CS PDF.")
 
@@ -275,7 +275,7 @@ def extract_IS_content(input_path):
         with open(path, 'wb') as f:
             doc.save(f)
         
-        content = f"{config['temporary_files_path']}/content.pdf"
+        content = os.path.join(config['temporary_files_path'], "content.pdf")
         convert(path, content)
         return content
     except Exception as e:
@@ -284,8 +284,26 @@ def extract_IS_content(input_path):
 
 def create_IS_cover_page(cover_page, doc_type, language):
     try:
-        template = PdfReader(open(os.path.join(config['template_files_path'],f"cover-{doc_type}-{language}.pdf"), "rb"))
+        path = os.path.join(config['template_files_path'],f"cover-{doc_type}-{language}.pdf")
+        template = PdfReader(open(path, "rb"))
         cover_content = PdfReader(open(cover_page, "rb"))
+        
+        if len(cover_content.pages) > len(template.pages):
+            with fitz.open(path) as t1:
+                with fitz.open(path) as t2:
+            
+                    for _ in range(len(template.pages)-1):
+                        t2.delete_page(0)
+
+                    for _ in range(len(cover_content.pages) - len(template.pages)):
+                        t1.insert_file(t2)
+
+                    path1 = os.path.join(config['temporary_files_path'],"template.pdf")
+                    t1.save(path1)
+                    template = PdfReader(open(path1, "rb"))
+        else: 
+            pass
+        
         for i in range(len(cover_content.pages)):
             background = template.pages[i]
             foreground = cover_content.pages[i]
@@ -305,50 +323,48 @@ def create_IS_cover_page(cover_page, doc_type, language):
 
 def merge_IS_pdf(cover_page, content):
     try:
-        merger = PdfMerger()
-        merger.append(cover_page)
-        merger.append(content)
+        with fitz.open(cover_page) as merger:
+            with fitz.open(content) as merger1:
+                merger.insert_file(merger1)
 
-        merged_pdf = os.path.join(config['temporary_files_path'], "output.pdf")
-        with open(merged_pdf, "wb") as outFile:
-            merger.write(outFile)
-        merger.close()
+                merged_pdf = os.path.join(config['temporary_files_path'], "output.pdf")
+                merger.save(merged_pdf)
 
-        return merged_pdf
+                return merged_pdf
     except Exception as e:
         print(f"{str(e)}\nAn error occurred while merging IS PDFs.")
         return None
 
 def edit_IS_pdf(merged_pdf, company_name, date, id, language, number_of_cover, filename, output_path):
     try:
-        doc = fitz.open(merged_pdf)
-        number = f"NO.: {id}-{language}"
-        page = doc[0]
-        
-        if language != "EN":
-            translator = deepl.Translator(config["auth_key"])
-            result = translator.translate_text(company_name, target_lang=language)
-            company_name = result.text
+        with fitz.open(merged_pdf) as doc:
+            number = f"NO.: {id}-{language}"
+            page = doc[0]
+            
+            if language != "EN":
+                translator = deepl.Translator(config["auth_key"])
+                result = translator.translate_text(company_name, target_lang=language)
+                company_name = result.text
 
-        def add_text(page):
-            rect = fitz.Rect(225, 100, 650, 400)
-            page.insert_textbox(rect, company_name, fontsize=16, fontname=config["font_name"],
-                                    fontfile=config["font_file"], fill=(1, 0, 0), align=0)
+            def add_text(page):
+                rect = fitz.Rect(225, 100, 650, 400)
+                page.insert_textbox(rect, company_name, fontsize=16, fontname=config["font_name"],
+                                        fontfile=config["font_file"], fill=(1, 0, 0), align=0)
 
-            rect1 = fitz.Rect(225, 130, 650, 400)
-            page.insert_textbox(rect1, date, fontsize=9, fontname=config["font_name"],
-                                    fontfile=config["font_file"], align=0)
+                rect1 = fitz.Rect(225, 130, 650, 400)
+                page.insert_textbox(rect1, date, fontsize=9, fontname=config["font_name"],
+                                        fontfile=config["font_file"], align=0)
 
-            rect2 = fitz.Rect(120, 80, 600, 400)
-            page.insert_textbox(rect2, number, fontsize=9, fontname=config["font_name"],
-                                    fontfile=config["font_file"], align=0)
-        add_text(page)
-
-        for i in range(1, number_of_cover):  # Assuming the information is added to all the cover pages
-            page = doc[i]
+                rect2 = fitz.Rect(120, 80, 600, 400)
+                page.insert_textbox(rect2, number, fontsize=9, fontname=config["font_name"],
+                                        fontfile=config["font_file"], align=0)
             add_text(page)
 
-        doc.save(os.path.join(output_path, f"{filename}.pdf"))
+            for i in range(1, number_of_cover):  # Assuming the information is added to all the cover pages
+                page = doc[i]
+                add_text(page)
+
+            doc.save(os.path.join(output_path, f"{filename}.pdf"))
     except Exception as e:
         print(f"{str(e)}\nAn error occurred while editing IS PDF.")
 
