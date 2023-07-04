@@ -2,7 +2,7 @@ import deepl, shutil, pickle, os
 from docx import Document
 
 config = {
-    "auth_key" : "", # Copy key from DeepL
+    "auth_key" : "daa69283-7136-c9a5-c283-38cbd645e38e", # Copy key from DeepL
     "input_folder" : "./input_folder",
     "output_folder" : "./docx_folder",
     "languages" : {
@@ -15,7 +15,6 @@ config = {
 
 def check_config():
     assert type(config["auth_key"]) == str, "Auth_key is not string"
-    assert len(config["auth_key"]) == 0, "Auth_key is not keyed in"
     for lang, operation in config["languages"].items():
         assert lang in ["DE", "JA", "ZH"], "Wrong language code for German, Japanese and Chinese"
         assert type(operation["translate"]) == bool, "Translation flag is not boolean"
@@ -179,7 +178,8 @@ def translate_docx(auth_key, file_path, languages, output_folder, glossary_folde
 
     return translated_files_list
 
-if "__name__" == "__main__":
+if __name__ == "__main__":
     check_config()
     file_path = extract_docxfile(config["input_folder"])
     translate_docx(config["auth_key"], file_path, config["languages"], config["output_folder"], config["glossary_folder"])
+    print("Translated file.")

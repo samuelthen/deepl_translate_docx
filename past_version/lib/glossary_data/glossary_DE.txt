@@ -1,1 +1,0 @@
-{"This Week's News": "Die Nachrichten dieser Woche (This Week's News)", "Media Releases": "Medienmitteilungen (Media Releases)", "Latest Research": "Neueste Forschung (Latest Research)"}
